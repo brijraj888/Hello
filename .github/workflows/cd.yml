@@ -16,7 +16,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           # Decode the base64-encoded private key
-          echo "${{ secrets.SERVER_SSH_KEY_BASE64 }}" | base64 --decode > ~/.ssh/id_rsa
+          echo "${{ secrets.SERVER_SSH_KEY }}" | base64 --decode > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
