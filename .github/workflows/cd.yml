@@ -15,17 +15,18 @@ jobs:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          printf "%s" "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          # Decode the base64-encoded private key
+          echo "${{ secrets.SERVER_SSH_KEY_BASE64 }}" | base64 --decode > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy Docker Container
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
-          # Pull the Docker image tagged with this commit SHA
+          # Pull Docker image tagged with this commit SHA
           docker pull brijraj12/hello:${{ github.event.workflow_run.head_commit.id }} &&
           
-          # Stop and remove old container if exists
+          # Stop and remove old container if it exists
           docker stop springboot-app || true &&
           docker rm springboot-app || true &&
           
