@@ -35,10 +35,11 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker Image
-        run: |
-          docker build -t brijraj888/hello:latest -t brijraj888/hello:${{ github.sha }} .
+  run: |
+    docker build -t brijraj12/hello:latest -t brijraj12/hello:${{ github.sha }} .
 
-      - name: Push Docker Image
-        run: |
-          docker push brijraj888/hello:latest
-          docker push brijraj888/hello:${{ github.sha }}
+- name: Push Docker Image
+  run: |
+    docker push brijraj12/hello:latest
+    docker push brijraj12/hello:${{ github.sha }}
+
