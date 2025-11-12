@@ -1,0 +1,22 @@
+name: Test SSH Connectivity to Server
+
+on:
+  workflow_dispatch:  # lets you run it manually from the Actions tab
+
+jobs:
+  test-ssh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" | base64 --decode > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Test SSH connection to server
+        run: |
+          echo "Testing SSH to ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} ..."
+          ssh -v -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo '✅ SSH connection successful!'"
