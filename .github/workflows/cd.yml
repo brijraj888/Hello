@@ -1,33 +1,32 @@
-name: CD - Deploy to Server
+name: CD - Deploy Spring Boot on Linux Server (Docker Only)
 
 on:
-  workflow_run:
-    workflows: ["CI - Build, Test, Docker Push"]
-    types:
-      - completed
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SERVER_SSH_KEY }}" | base64 --decode > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
 
-      - name: Test SSH connection
+      - name: Stop existing container if running
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH OK'"
+          docker stop hello || true
+          docker rm hello || true
 
-      - name: Deploy Docker Container
+      - name: Pull latest image
+        run: docker pull brijraj12/hello:latest
+
+      - name: Run container
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
-            docker pull brijraj12/hello:${{ github.event.workflow_run.head_commit.id }} &&
-            docker stop springboot-app || true &&
-            docker rm springboot-app || true &&
-            docker run -d --name springboot-app -p 8080:8080 brijraj12/hello:${{ github.event.workflow_run.head_commit.id }}
-          "
+          docker run -d \
+            --name hello \
+            -p 8080:8080 \
+            -e SPRING_PROFILES_ACTIVE=prod \
+            --restart=always \
+            brijraj12/hello:latest
